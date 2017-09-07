@@ -29,6 +29,8 @@ public class MapPointHelper {
     private final DisplayMetrics displayMetrics;
     private final Paint paint;
 
+    private final int blue;
+
     /*
      带旗子-文字背景绿色  --- 选中
      只有点状图 --距离远的
@@ -46,7 +48,7 @@ public class MapPointHelper {
 
     public MapPointHelper(Context context) {
         this.mContext = context;
-
+        blue  = mContext.getResources().getColor(R.color.ddblue);
         // 初始化像素比例， 画笔种类
         displayMetrics = mContext.getResources().getDisplayMetrics();
         int color = Color.WHITE;
@@ -123,15 +125,17 @@ public class MapPointHelper {
         // 计算时间文字显示的宽高及绘制的xy起点
         float timeTextWidth = getFontlength(paint, time);
         float timeTextX = (sumWidth - timeTextWidth) / 2;
-        float timeTextY = defaultPadding + nameTextY + textHeight;
+        float timeTextY = nameTextY + textHeight;
 
         // 总高度等于旗子高度 + 默认padding 之和 *2
         float sumHeight = (flagHeight + defaultPadding) * 2;
         Log.w(TAG, "sumWidth: " + sumWidth);
         Log.w(TAG, "sumHeight: " + sumHeight);
 
+        float rectLeft =  stationTextWidth > timeTextWidth ? nameTextX : timeTextX;
+        float rectRight =  stationTextWidth > timeTextWidth ? nameTextX + stationTextWidth : timeTextX + timeTextWidth;
         // 具有内边距的矩形背景
-        RectF reftF = new RectF(nameTextX - defaultPadding, nameTextY - textHeight, nameTextX + stationTextWidth + defaultPadding, nameTextY + textHeight + 2 * defaultPadding);
+        RectF reftF = new RectF(rectLeft - defaultPadding, nameTextY - textHeight, rectRight + defaultPadding, nameTextY + textHeight + 2 * defaultPadding);
 
         Bitmap bmp = Bitmap.createBitmap(sumWidth, (int) sumHeight, Bitmap.Config.ARGB_8888);
 
@@ -143,7 +147,7 @@ public class MapPointHelper {
             case CHOOSE:
                 canvasTemp.drawBitmap(pointBitmap, pointX, pointY, paint);
                 canvasTemp.drawBitmap(flagBitmap, flagX, flagY, paint);
-                paint.setColor(Color.BLUE);
+                paint.setColor(blue);
                 canvasTemp.drawRoundRect(reftF, 4, 4, paint);
                 paint.setColor(Color.WHITE);
                 storkPaint.setColor(Color.WHITE);
@@ -159,8 +163,8 @@ public class MapPointHelper {
 
                 paint.setColor(Color.WHITE);
                 canvasTemp.drawRoundRect(reftF, 4, 4, paint);
-                paint.setColor(Color.BLUE);
-                storkPaint.setColor(Color.BLUE);
+                paint.setColor(blue);
+                storkPaint.setColor(blue);
                 canvasTemp.drawRoundRect(reftF, 4, 4, storkPaint);
                 canvasTemp.drawText(stationName, nameTextX, nameTextY, paint);
                 canvasTemp.drawText(time, timeTextX, timeTextY, paint);
