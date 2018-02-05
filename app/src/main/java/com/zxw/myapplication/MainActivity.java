@@ -30,12 +30,13 @@ public class MainActivity extends ActionBarActivity {
         imageView = (ImageView) findViewById(R.id.imageView);
 
 //        imageView.setImageBitmap(MapPointHelper.getInstance(this).createBitmap());
-        imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, MapPointHelper.Station.UP, "龙华", "19:20"));
+//        imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, MapPointHelper.Station.UP, "龙华", "19:20"));
 //        fun1();
     }
 
     public void cu(View view){
-        imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, MapPointHelper.Station.UP, 30, ":幼儿园", "19：20"));
+//        imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, MapPointHelper.Station.UP, 30, ":幼儿园", "19：20"));
+        imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, R.mipmap.down_point, 30, ":幼儿园", "19：20"));
     }
     public void cd(View view){
         imageView.setImageBitmap(MapPointHelper.getInstance(this).generateBitmap(MapPointHelper.State.CHOOSE, MapPointHelper.Station.DOWN, "龙华弓村", "1920"));

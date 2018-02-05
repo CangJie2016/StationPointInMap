@@ -8,8 +8,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.support.annotation.DrawableRes;
 import android.util.DisplayMetrics;
 import android.util.Log;
+
+import static android.R.attr.id;
 
 
 /**
@@ -66,15 +69,27 @@ public class MapPointHelper {
         storkPaint.setStrokeWidth(2);
     }
 
+    @Deprecated
     public Bitmap generateBitmap(State state, Station station, String stationName, String time){
         return  generateBitmap(state,station,DEFAULT_TEXT_SIZE, stationName, time);
     }
 
+    @Deprecated
     public Bitmap generateBitmap(State state, Station station, int textSize, String stationName, String time){
         paint.setTextSize(scalaFonts(textSize));
         this.mState = state;
         this.mStation = station;
         return  getImage(stationName, time);
+    }
+
+    public Bitmap generateBitmap(State state, int id, String stationName, String time){
+        return  generateBitmap(state,id,DEFAULT_TEXT_SIZE, stationName, time);
+    }
+
+    public Bitmap generateBitmap(State state, int id, int textSize, String stationName, String time){
+        paint.setTextSize(scalaFonts(textSize));
+        this.mState = state;
+        return  getImage(stationName, time, id);
     }
 
     public static MapPointHelper getInstance(Context context) {
@@ -88,6 +103,91 @@ public class MapPointHelper {
     /*
      * 默认采用白色字体，宋体文字加粗
      */
+    private Bitmap getImage(String stationName, String time, int id) {
+        // 先画点，再画旗子
+        Bitmap flagBitmap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.flag2);
+        int flagWidth = flagBitmap.getScaledWidth(displayMetrics);
+        int flagHeight = flagBitmap.getScaledHeight(displayMetrics);
+//2 * defaultPadding +
+        int textWidth = (int) (getFontlength(paint, stationName));
+        // 设置过字体大小，才知道画笔对应字符串有多宽
+        int sumWidth = textWidth > flagWidth ? textWidth : flagWidth;
+        sumWidth += 4* defaultPadding;
+        int flagX = (sumWidth - flagWidth) / 2;
+        int flagY = defaultPadding;
+
+        Bitmap pointBitmap = BitmapFactory.decodeResource(mContext.getResources(), id);
+        int pointWidth = pointBitmap.getScaledWidth(displayMetrics);
+        int pointHeight = pointBitmap.getScaledHeight(displayMetrics);
+        // +2 是因为看着像是左倾，所以往右边去两个单位
+        int pointX = (sumWidth - pointWidth) / 2 + 2;
+        // 旗子的落脚点在点的中心，因此要减去2分之1的高度
+        int pointY = defaultPadding + flagHeight - pointHeight / 2;
+
+        float stationTextWidth = getFontlength(paint, stationName);
+        // 字体高度，由于站点名称和时间都是一行来表示，所以此高度就是通用的
+        float textHeight = getFontHeight(paint);
+        float nameTextX = (sumWidth - stationTextWidth) / 2;
+//        float tY = (y - getFontHeight(paint))/2+getFontLeading(paint);
+        // canvas 绘制text的y坐标是文字基线baseLine的高度，因此要加上文字的高度
+        float nameTextY = 2 * defaultPadding + flagHeight + pointHeight/2 + textHeight;
+
+        // 计算时间文字显示的宽高及绘制的xy起点
+        float timeTextWidth = getFontlength(paint, time);
+        float timeTextX = (sumWidth - timeTextWidth) / 2;
+        float timeTextY = nameTextY + textHeight;
+
+        // 总高度等于旗子高度 + 默认padding 之和 *2
+        float sumHeight = (flagHeight + defaultPadding) * 2;
+        Log.w(TAG, "sumWidth: " + sumWidth);
+        Log.w(TAG, "sumHeight: " + sumHeight);
+
+        float rectLeft =  stationTextWidth > timeTextWidth ? nameTextX : timeTextX;
+        float rectRight =  stationTextWidth > timeTextWidth ? nameTextX + stationTextWidth : timeTextX + timeTextWidth;
+        // 具有内边距的矩形背景
+        RectF reftF = new RectF(rectLeft - defaultPadding, nameTextY - textHeight, rectRight + defaultPadding, nameTextY + textHeight + 2 * defaultPadding);
+
+        Bitmap bmp = Bitmap.createBitmap(sumWidth, (int) sumHeight, Bitmap.Config.ARGB_8888);
+
+        //图象大小要根据文字大小算下,以和文本长度对应
+        Canvas canvasTemp = new Canvas(bmp);
+        canvasTemp.drawColor(Color.TRANSPARENT);
+
+        switch (mState){
+            case CHOOSE:
+                canvasTemp.drawBitmap(pointBitmap, pointX, pointY, paint);
+                canvasTemp.drawBitmap(flagBitmap, flagX, flagY, paint);
+                paint.setColor(blue);
+                canvasTemp.drawRoundRect(reftF, 4, 4, paint);
+                paint.setColor(Color.WHITE);
+                storkPaint.setColor(Color.WHITE);
+                canvasTemp.drawRoundRect(reftF, 4, 4, storkPaint);
+                canvasTemp.drawText(stationName, nameTextX, nameTextY, paint);
+                canvasTemp.drawText(time, timeTextX, timeTextY, paint);
+                break;
+            case FAR:
+                canvasTemp.drawBitmap(pointBitmap, pointX, pointY, paint);
+                break;
+            case NEAR:
+                canvasTemp.drawBitmap(pointBitmap, pointX, pointY, paint);
+
+                paint.setColor(Color.WHITE);
+                canvasTemp.drawRoundRect(reftF, 4, 4, paint);
+                paint.setColor(blue);
+                storkPaint.setColor(blue);
+                canvasTemp.drawRoundRect(reftF, 4, 4, storkPaint);
+                canvasTemp.drawText(stationName, nameTextX, nameTextY, paint);
+                canvasTemp.drawText(time, timeTextX, timeTextY, paint);
+                break;
+        }
+        Log.w(TAG, "getImage:  draw" );
+        return bmp;
+    }
+
+    /*
+     * 默认采用白色字体，宋体文字加粗
+     */
+    @Deprecated
     private Bitmap getImage(String stationName, String time) {
         // 先画点，再画旗子
         Bitmap flagBitmap = BitmapFactory.decodeResource(mContext.getResources(), R.mipmap.flag2);
@@ -173,7 +273,6 @@ public class MapPointHelper {
         Log.w(TAG, "getImage:  draw" );
         return bmp;
     }
-
     /**
      * 根据屏幕系数比例获取文字大小
      *
